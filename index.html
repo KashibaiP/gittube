@@ -50,135 +50,133 @@ select{flex:0 0 auto}
     linear-gradient(160deg,hsl(var(--h) 58% 34%),hsl(calc(var(--h) + 28) 62% 22%))}
 .thumb .own{font-family:var(--mono);font-size:12px;opacity:.8;overflow-wrap:anywhere}
 .thumb .nm{font-family:var(--display);font-weight:800;font-size:clamp(20px,4.6vw,26px);line-height:1.05;letter-spacing:-.01em;overflow-wrap:anywhere;margin-top:3px}
-.ranks{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}
-.rk{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.42);padding:3px 7px;border-radius:4px}
+.badges{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}
+.bd{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.42);padding:3px 7px;border-radius:4px}
 .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;flex:1}
-.desc{margin:0;color:var(--fg)}
+.desc{margin:0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .desc.none{color:var(--muted);font-style:italic}
-.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-top:auto}
-.tag{background:var(--chip);color:var(--chip-fg);padding:3px 8px;border-radius:4px}
+.topics{display:flex;gap:5px;flex-wrap:wrap}
+.tp{font:inherit;font-family:var(--mono);font-size:11px;border:0;cursor:pointer;background:var(--chip);color:var(--chip-fg);padding:3px 7px;border-radius:4px}
+.meta{display:flex;gap:6px 12px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-top:auto}
 .lang{font-family:var(--mono);font-size:12px}
 a.go{color:var(--accent);font-weight:600;text-decoration:none;margin-left:auto}
 a.go:hover{text-decoration:underline}
 .empty{padding:40px 0;color:var(--muted)}
 
 footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:grid;gap:8px;max-width:70ch}
-footer a{color:var(--accent)}
 footer p{margin:0}
+footer code{font-family:var(--mono);font-size:13px}
 @media (prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:hover{transform:translateY(-2px)}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand"><h1>Git<span>Tube</span></h1><span class="snap">snapshot 2 Nov 2026</span></div>
-    <p class="lede">The repos GitHub developers are starring this week, grouped by what they are for. Every card links to the real repository.</p>
+    <div class="brand"><h1>Git<span>Tube</span></h1><span class="snap" id="stamp"></span></div>
+    <p class="lede">Repositories worth a look on GitHub, grouped into lanes by language and topic. Every card links to the real repository.</p>
   </header>
 
   <div class="controls">
     <div class="row">
-      <input type="search" id="q" placeholder="Search repos" aria-label="Search repos" autocomplete="off">
+      <input type="search" id="q" placeholder="Search names, descriptions, topics" aria-label="Search repos" autocomplete="off">
       <select id="sort" aria-label="Sort order">
-        <option value="weekly">Weekly rank</option>
-        <option value="daily">Daily rank</option>
-        <option value="az">A to Z</option>
+        <option value="stars">Most stars</option>
+        <option value="forks">Most forks</option>
+        <option value="created">Newest</option>
+        <option value="updated">Recently updated</option>
       </select>
     </div>
-    <div class="chips" id="chips" role="group" aria-label="Topics"></div>
+    <div class="chips" id="chips" role="group" aria-label="Lanes"></div>
   </div>
 
   <div class="count" id="count" aria-live="polite"></div>
   <main class="grid" id="grid"></main>
 
   <footer>
-    <p>Ranks come from <a href="https://trendshift.io/weekly" target="_blank" rel="noopener">Trendshift's weekly list</a> and the 2 Nov issue of <a href="https://github.com/marc-ko/daily-trending-repo/issues/597" target="_blank" rel="noopener">marc-ko/daily-trending-repo</a>. A repo with no daily badge was not in that daily top 10.</p>
-    <p>Descriptions are short paraphrases of what those pages state. Star counts are left out because the source pages displayed them inconsistently. Topic groups are a manual reading of each description.</p>
-    <p>This is a fixed snapshot. It does not refresh on its own.</p>
+    <p id="how"></p>
+    <p>Data comes from the GitHub repository search API. <code>scripts/update.py</code> rewrites <code>data.js</code>. Edit the <code>LANES</code> list in that script to add your own languages or topics.</p>
+    <p>Stars and forks are counts at the time of the last refresh. Repos that mention certain adult-content words are left out.</p>
   </footer>
 </div>
 
+<script src="data.js"></script>
 <script>
 (function(){
-  // w = weekly rank (Trendshift), d = daily rank (2 Nov snapshot)
-  var R = [
-    {r:"deepseek-ai/dsh-superagent-prototype",t:"agents",l:"TypeScript",w:1,d:1,x:"Prototype for a more autonomous agent system."},
-    {r:"thedotmack/claude-mem",t:"agents",w:11,x:"Captures agent session activity, compresses it, and feeds the context back in later."},
-    {r:"vercel-labs/agent-desktop",t:"agents",w:12,x:"Gives agents desktop computer use through OS accessibility trees."},
-    {r:"wangzan101/Mika",t:"device",l:"Kotlin",w:10,d:4,x:"On-device Android AI agent that operates apps and the web."},
-    {r:"ccch1mneyyy/dsh-Go",t:"device",w:15,x:"Mobile-local DeepSeek harness that can also remotely control a computer."},
-    {r:"modelflare-ai/AnyModelBot",t:"device",w:6,x:"Local-first, open-source AI bot that works with many models."},
-    {r:"morluto/rea",t:"re",w:3,x:"Uses agents to reverse engineer apps and native binaries."},
-    {r:"Verlintas/NOIR",t:"re",w:4,x:"Desktop audit tool for what an Android device may leak."},
-    {r:"heydamir/unslop",t:"skills",l:"JavaScript",d:3,x:"Claude skill that redesigns AI-looking, vibe-coded UIs."},
-    {r:"patch-gg/pixelfx",t:"skills",l:"JavaScript",d:6,x:"244 pixel art effects, plus a Claude Code skill for creating new ones."},
-    {r:"caru-ini/stack-diagram",t:"skills",w:8,x:"Agent skill that turns a stack description into an architecture diagram."},
-    {r:"google/elephant-goldfish-model",t:"skills",w:13,x:"Open-source skills for designing and reviewing software with AI agents."},
-    {r:"haydenschmitty/floorplan",t:"skills",l:"JavaScript",d:9,x:"Interactive, plain-English map of a codebase, generated by Claude or Codex."},
-    {r:"l0ng-ai/openidea",t:"rust",w:9,x:"An IDE rebuilt in Rust with an IntelliJ-style keymap and tool windows."},
-    {r:"storytold/craft-anything",t:"rust",l:"Rust",w:2,d:10,x:"Tool for understanding how software works and building your own."},
-    {r:"valentderah/totk-pc-recomp",t:"games",l:"C",d:5,x:"Static recompilation of a Nintendo game for Windows x86-64 with a Vulkan renderer. No game files included."},
-    {r:"Djihads80/Eglantine",t:"games",l:"C++",d:7,x:"Experimental Nintendo Switch 2 emulator."},
-    {r:"Thysrael/Horizon",t:"other",w:7,x:"AI-powered news radar that writes daily briefings in English and Chinese."},
-    {r:"pingdotgg/t3code",t:"other",w:5,x:""},
-    {r:"anhao/ai-pose-gallery-zh",t:"other",l:"TypeScript",d:2,x:"Chinese-language gallery of AI pose reference images, with no dependencies."},
-    {r:"paipiange/nvzhuang",t:"other",l:"Go",d:8,x:"Chinese-English AI clothing reference gallery with a virtual try-on site."},
-    {r:"public-apis/public-apis",t:"other",w:14,x:"Collective list of free APIs."}
-  ];
-  var T = {
-    all:{n:"All",h:220},
-    agents:{n:"Agent infrastructure",h:222},
-    skills:{n:"Agent skills and dev tools",h:268},
-    device:{n:"On-device AI",h:168},
-    re:{n:"Reverse engineering and security",h:8},
-    rust:{n:"Rust tooling",h:24},
-    games:{n:"Games and emulation",h:292},
-    other:{n:"Other",h:198}
-  };
-  var order=["all","agents","skills","device","re","rust","games","other"];
-  var state={t:"all",q:"",s:"weekly"};
   var grid=document.getElementById("grid"),chips=document.getElementById("chips"),count=document.getElementById("count");
-  var q=document.getElementById("q"),sort=document.getElementById("sort");
-
+  var q=document.getElementById("q"),sort=document.getElementById("sort"),how=document.getElementById("how"),stamp=document.getElementById("stamp");
+  var D=window.GITTUBE;
   function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+  if(!D||!D.lanes){grid.appendChild(el("div","empty","data.js did not load. Run scripts/update.py or reload the page."));return}
+
+  var HUES={week:222,python:205,rust:22,telecom:160,"5g":285};
+  var nf=new Intl.NumberFormat("en");
+  function fmt(iso){
+    if(!iso)return "";
+    var d=new Date(iso+"T00:00:00Z");
+    return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+  }
+
+  var byName={},all=[];
+  D.lanes.forEach(function(L){
+    L.repos.forEach(function(r,i){
+      if(!byName[r.n]){byName[r.n]=r;r.lane=L.id;all.push(r)}
+    });
+  });
+  var order=["all"].concat(D.lanes.map(function(L){return L.id}));
+  var laneById={};D.lanes.forEach(function(L){laneById[L.id]=L});
+  var state={lane:"all",q:"",s:"stars"};
+  stamp.textContent="data from "+fmt(D.generated);
+
+  function pool(){return state.lane==="all"?all:laneById[state.lane].repos}
 
   function renderChips(){
     chips.textContent="";
     order.forEach(function(k){
-      var n=k==="all"?R.length:R.filter(function(x){return x.t===k}).length;
-      var b=el("button","chip",T[k].n);b.type="button";
-      b.setAttribute("aria-pressed",String(state.t===k));
+      var name=k==="all"?"All lanes":laneById[k].name;
+      var n=k==="all"?all.length:laneById[k].repos.length;
+      var b=el("button","chip",name);b.type="button";
+      b.setAttribute("aria-pressed",String(state.lane===k));
       b.appendChild(el("b",null,String(n)));
-      b.addEventListener("click",function(){state.t=k;render()});
+      b.addEventListener("click",function(){state.lane=k;render()});
       chips.appendChild(b);
     });
   }
 
-  function key(x){
-    if(state.s==="az")return x.r.toLowerCase();
-    var v=state.s==="weekly"?x.w:x.d;
-    return v==null?999:v;
-  }
-
-  function card(x){
-    var parts=x.r.split("/");
+  function card(r,laneId){
+    var parts=r.n.split("/");
     var c=el("article","card");
-    var th=el("div","thumb");th.style.setProperty("--h",T[x.t].h);
-    var rk=el("div","ranks");
-    if(x.w)rk.appendChild(el("span","rk","Weekly #"+x.w));
-    if(x.d)rk.appendChild(el("span","rk","Daily #"+x.d));
-    th.appendChild(rk);
+    var th=el("div","thumb");th.style.setProperty("--h",HUES[laneId]||220);
+    var bd=el("div","badges");
+    bd.appendChild(el("span","bd","★ "+nf.format(r.s)));
+    bd.appendChild(el("span","bd",laneById[laneId].name));
+    th.appendChild(bd);
     th.appendChild(el("div","own",parts[0]+" /"));
     th.appendChild(el("div","nm",parts[1]));
     c.appendChild(th);
+
     var b=el("div","body");
-    b.appendChild(el("p",x.x?"desc":"desc none",x.x||"No description shown on the source page."));
+    b.appendChild(el("p",r.d?"desc":"desc none",r.d||"No description on GitHub."));
+    if(r.t&&r.t.length){
+      var tp=el("div","topics");
+      r.t.forEach(function(t){
+        var x=el("button","tp",t);x.type="button";
+        x.setAttribute("aria-label","Search topic "+t);
+        x.addEventListener("click",function(){q.value=t;state.q=t;render();window.scrollTo(0,0)});
+        tp.appendChild(x);
+      });
+      b.appendChild(tp);
+    }
     var m=el("div","meta");
-    m.appendChild(el("span","tag",T[x.t].n));
-    if(x.l)m.appendChild(el("span","lang",x.l));
-    var a=el("a","go","Open on GitHub ↗");
-    a.href="https://github.com/"+x.r;a.target="_blank";a.rel="noopener";
-    a.setAttribute("aria-label","Open "+x.r+" on GitHub");
-    m.appendChild(a);
+    if(r.l)m.appendChild(el("span","lang",r.l));
+    m.appendChild(el("span",null,nf.format(r.f)+" forks"));
+    m.appendChild(el("span",null,"created "+fmt(r.c)));
+    m.appendChild(el("span",null,"updated "+fmt(r.u)));
+    if(/^[\w.-]+\/[\w.-]+$/.test(r.n)){
+      var a=el("a","go","Open on GitHub ↗");
+      a.href="https://github.com/"+r.n;a.target="_blank";a.rel="noopener";
+      a.setAttribute("aria-label","Open "+r.n+" on GitHub");
+      m.appendChild(a);
+    }
     b.appendChild(m);c.appendChild(b);
     return c;
   }
@@ -186,16 +184,21 @@ footer p{margin:0}
   function render(){
     renderChips();
     var s=state.q.trim().toLowerCase();
-    var list=R.filter(function(x){
-      if(state.t!=="all"&&x.t!==state.t)return false;
+    var key={stars:"s",forks:"f",created:"c",updated:"u"}[state.s];
+    var list=pool().filter(function(r){
       if(!s)return true;
-      return (x.r+" "+x.x+" "+(x.l||"")+" "+T[x.t].n).toLowerCase().indexOf(s)>-1;
-    });
-    list.sort(function(a,b){var ka=key(a),kb=key(b);return ka<kb?-1:ka>kb?1:0});
+      return (r.n+" "+r.d+" "+r.l+" "+(r.t||[]).join(" ")).toLowerCase().indexOf(s)>-1;
+    }).slice().sort(function(a,b){return a[key]<b[key]?1:a[key]>b[key]?-1:0});
     grid.textContent="";
-    if(!list.length){grid.appendChild(el("div","empty","No repos match. Clear the search or pick another topic."))}
-    list.forEach(function(x){grid.appendChild(card(x))});
-    count.textContent=list.length+" of "+R.length+" repos";
+    if(!list.length)grid.appendChild(el("div","empty","No repos match. Clear the search or pick another lane."));
+    list.forEach(function(r){grid.appendChild(card(r,state.lane==="all"?r.lane:state.lane))});
+    count.textContent=list.length+" repos shown";
+    if(state.lane==="all"){
+      how.textContent="All lanes combines the lists below with duplicates removed.";
+    }else{
+      var L=laneById[state.lane];
+      how.textContent=L.hint+" "+nf.format(L.matches)+" repos match this search on GitHub; the top "+L.repos.length+" are shown.";
+    }
   }
 
   q.addEventListener("input",function(){state.q=q.value;render()});

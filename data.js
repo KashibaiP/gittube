@@ -1,0 +1,71 @@
+window.GITTUBE = {"generated":"2026-11-03","lanes":[
+{"id":"week","name":"This week","hint":"Repos created in the last 7 days, most starred first.","matches":1907683,"repos":[
+{"n":"deepseek-ai/dsh-superagent-prototype","d":"Towards a More Autonomous Agent System","l":"TypeScript","s":12745,"f":1318,"c":"2026-10-31","u":"2026-11-02","t":[]},
+{"n":"heydamir/unslop","d":"A Claude skill that turns vibecoded, AI-looking UI into a designed interface","l":"JavaScript","s":6032,"f":312,"c":"2026-10-29","u":"2026-11-02","t":[]},
+{"n":"wangzan101/Mika","d":"An on-device AI agent for Android that operates apps and the web to get things done for you.","l":"Kotlin","s":5205,"f":1001,"c":"2026-10-29","u":"2026-11-02","t":["accessibility","ai-agent","android","automation"]},
+{"n":"valentderah/totk-pc-recomp","d":"Static recompilation of The Legend of Zelda: Tears of the Kingdom to native Windows and Linux x86-64, with a Vulkan renderer. Game files not included.","l":"C","s":3892,"f":314,"c":"2026-10-29","u":"2026-11-02","t":["game","linux","port","recompilation"]},
+{"n":"storytold/craft-anything","d":"Craft Anything: understand how any software works, and craft your own.","l":"Rust","s":3552,"f":574,"c":"2026-10-31","u":"2026-11-02","t":[]},
+{"n":"patch-gg/pixelfx","d":"244 pixel art effects, every one a small piece of code. Plus a Claude Code skill to make your own.","l":"JavaScript","s":3421,"f":462,"c":"2026-10-30","u":"2026-11-02","t":["agent-skills","animation","canvas","claude-code-plugin"]},
+{"n":"Djihads80/Eglantine","d":"VERY experimental Nintendo Switch 2 emulator","l":"C++","s":2389,"f":282,"c":"2026-10-29","u":"2026-11-02","t":[]},
+{"n":"paipiange/nvzhuang","d":"1407 张 AI 女装参考图集与虚拟试穿网站，支持中英检索、OpenAI Images / Gemini / 豆包及自定义 Base URL、API Key、模型。","l":"Go","s":2041,"f":522,"c":"2026-10-29","u":"2026-11-02","t":[]},
+{"n":"lexifina/global-law","d":"Git for Global Law: the law of every country as one git history, each country's record a submodule, every commit one law taking effect","l":"HTML","s":1688,"f":153,"c":"2026-10-28","u":"2026-11-02","t":[]},
+{"n":"BryceYuuu/RUN","d":"RUN · 润：海外移居手册（欧洲 36 国 · 110 条路线 · 主要移民地区）","l":"Python","s":1485,"f":87,"c":"2026-10-29","u":"2026-11-02","t":[]},
+{"n":"smithjohn78390/tongjiang-lab","d":"Free interactive 3D science lessons for high school · 铜匠实验室","l":"HTML","s":1434,"f":367,"c":"2026-10-28","u":"2026-11-02","t":["3d","biology","chemistry","education"]},
+{"n":"Arjun-Ingole/hop","d":"Install Linux next to Windows without a USB stick","l":"PowerShell","s":1371,"f":47,"c":"2026-10-30","u":"2026-11-02","t":[]}
+]},
+{"id":"python","name":"Python","hint":"Python repos created in the last 30 days, most starred first.","matches":1373550,"repos":[
+{"n":"Gathin23/cleanyourtv","d":"Debloat any Android or Google TV over Wi-Fi and get an Apple TV-style home.","l":"Python","s":50256,"f":6342,"c":"2026-10-17","u":"2026-11-02","t":["adb","adblock","android-tv","android-tv-launcher"]},
+{"n":"deepseek-ai/DeepInfer","d":"DeepInfer: High-performance, large-scale inference framework for DeepSeek models","l":"Python","s":25019,"f":3036,"c":"2026-10-16","u":"2026-11-02","t":[]},
+{"n":"google-research/harness2","d":"","l":"Python","s":22086,"f":2206,"c":"2026-10-06","u":"2026-11-02","t":[]},
+{"n":"seedds/nxnative","d":"Switch games running natively on iPhone, iPad and Mac: an NSP folder becomes an unsigned IPA (NSO rewriter, Horizon HLE host, NVN→Metal)","l":"Python","s":11359,"f":1853,"c":"2026-10-13","u":"2026-11-02","t":[]},
+{"n":"xiaoyang111222/cn-math-taxonomy","d":"数学（小学到高中）、英语（三年级到高中）、初中物理的知识图谱：1644 个知识点、2403 条先修边、6723 道题，对齐课标，附自适应前置诊断。","l":"Python","s":6205,"f":1585,"c":"2026-10-18","u":"2026-11-02","t":["chinese","curriculum","diagnostic","edtech"]},
+{"n":"rddmwmddr/android-ad-cleaner","d":"关掉国产安卓手机系统里的广告、热搜、资讯推荐和营销推送。不 root，可还原，支持 AI 智能体一键执行。","l":"Python","s":5889,"f":532,"c":"2026-10-24","u":"2026-11-02","t":["adb","ai-agent","android","coloros"]},
+{"n":"zhongerxin/iPhone-use","d":"让 Codex 通过 USB 操作真实 iPhone：引导安装、App 自动化、实时屏幕与截图回退。","l":"Python","s":4848,"f":483,"c":"2026-10-06","u":"2026-11-02","t":[]},
+{"n":"Jakeschincariol/day-trader-skill","d":"11 Claude skills for day trading: scan thousands of charts, track breaking news, time every entry and exit, and replay every outcome before you risk a dollar.","l":"Python","s":4543,"f":1088,"c":"2026-10-20","u":"2026-11-02","t":["backtesting","claude","claude-skills","day-trading"]},
+{"n":"microsoft/TokenEconomizer","d":"Experience-Driven Black-Box Cost Control for Coding Agents","l":"Python","s":4432,"f":257,"c":"2026-10-13","u":"2026-11-02","t":["agentic-ai","agentic-coding","ai-coding","ai-coding-assistant"]},
+{"n":"interplains/Zero-Breach-Toolkit","d":"Free, open-source check for traces of mercenary spyware (Pegasus, Predator, Graphite, Candiru and more) on computers, Android phones and iPhone backups. Double-click apps for Windows, Mac and Linux, in 27 languages.","l":"Python","s":4264,"f":448,"c":"2026-10-25","u":"2026-11-02","t":[]},
+{"n":"aicodeking/leanrea","d":"One 8 KB skill that replaces REA (Reverse Engineer Anything): plain CLI tools, no MCP. Benchmarked: 38% faster, 35% cheaper.","l":"Python","s":3922,"f":598,"c":"2026-10-17","u":"2026-11-02","t":[]}
+]},
+{"id":"rust","name":"Rust","hint":"Rust repos created in the last 30 days, most starred first.","matches":81143,"repos":[
+{"n":"storytold/wordcraft","d":"An open-source, clean-room reimplementation of Microsoft Word in pure Rust","l":"Rust","s":17038,"f":4689,"c":"2026-10-07","u":"2026-11-02","t":[]},
+{"n":"tangency-labs/solidcraft","d":"SolidCraft: an open-source parametric 3D CAD application built in pure Rust. Desktop, web, and automation through MCP.","l":"Rust","s":13135,"f":1722,"c":"2026-10-07","u":"2026-11-02","t":["3d-modeling","brep","cad","egui"]},
+{"n":"storytold/cadcraft","d":"CADCraft: computer-aided design and drafting — an open-source, clean-room AutoCAD-style app in pure Rust","l":"Rust","s":7473,"f":3204,"c":"2026-10-07","u":"2026-11-02","t":[]},
+{"n":"storytold/gridcraft","d":"GridCraft: an open-source, clean-room spreadsheet (Microsoft Excel-style) in pure Rust. By ArtCraft.","l":"Rust","s":7025,"f":3264,"c":"2026-10-07","u":"2026-11-02","t":[]},
+{"n":"storytold/craft-launcher","d":"The Craft App Launcher","l":"Rust","s":4783,"f":1393,"c":"2026-10-09","u":"2026-11-02","t":[]},
+{"n":"storytold/deckcraft","d":"Presentations and slide shows: an open-source, clean-room reimplementation of Microsoft PowerPoint in pure Rust. Part of the ArtCraft Crafting Apps.","l":"Rust","s":4529,"f":2613,"c":"2026-10-07","u":"2026-11-02","t":[]},
+{"n":"storytold/figcraft","d":"FigCraft: interface design and prototyping; an open-source, clean-room reimplementation of collaborative design workflows in pure Rust","l":"Rust","s":4120,"f":1609,"c":"2026-10-09","u":"2026-11-02","t":["design","rust","tools"]},
+{"n":"nullmoth/nvidia-macos-driver","d":"Metal driver for NVIDIA GeForce cards on macOS Sequoia","l":"Rust","s":4016,"f":392,"c":"2026-10-07","u":"2026-11-02","t":["kext","macos","metal","nvidia"]},
+{"n":"storytold/soundcraft","d":"An open-source, clean-room reimplementation of Avid Pro Tools in pure Rust","l":"Rust","s":4013,"f":2470,"c":"2026-10-07","u":"2026-11-02","t":[]},
+{"n":"storytold/craft-anything","d":"Craft Anything: understand how any software works, and craft your own.","l":"Rust","s":3552,"f":574,"c":"2026-10-31","u":"2026-11-02","t":[]},
+{"n":"liseami/CCBaga","d":"","l":"Rust","s":3365,"f":347,"c":"2026-10-11","u":"2026-11-02","t":[]},
+{"n":"t4t5/owly","d":"airdrop for non-apple devices","l":"Rust","s":3247,"f":253,"c":"2026-10-08","u":"2026-11-02","t":["airdrop","awdl","omarchy","owl"]}
+]},
+{"id":"telecom","name":"Telecom","hint":"Repos with the telecom topic, pushed in the last 14 days, 10+ stars.","matches":13,"repos":[
+{"n":"absmach/magistrala","d":"IoT Platform Framework","l":"Go","s":2658,"f":694,"c":"2015-07-06","u":"2026-11-02","t":["coap","distributed-systems","edge","edge-computing"]},
+{"n":"Community-VyProjects/VyManager","d":"Multi-tenant network management platform to configure, deploy, and monitor VyOS instances across multiple sites.","l":"TypeScript","s":490,"f":68,"c":"2025-03-19","u":"2026-11-02","t":["central-management","dashboard","deployment","devops"]},
+{"n":"praetorian-inc/nerva","d":"Fast service fingerprinting CLI for 170+ protocols (TCP/UDP/SCTP) - built by Praetorian","l":"Go","s":376,"f":56,"c":"2026-01-25","u":"2026-10-30","t":["capability","cli-tool","external-network-security","go-library"]},
+{"n":"0dayInc/pwn","d":"PWN is an open security automation framework that aims to stand on the shoulders of security giants, promoting trust and innovation.","l":"Ruby","s":86,"f":12,"c":"2022-02-28","u":"2026-10-27","t":["ai-agents","ai-harness","ai-self-learning","artificial-intelligence"]},
+{"n":"MoazEb/tac-database","d":"Complete TAC (Type Allocation Code) database for mobile devices up to October 2026. Useful for IMEI lookup, device fingerprinting, and telecom applications.","l":"","s":67,"f":18,"c":"2026-03-26","u":"2026-11-02","t":["android","imei","imei-number","iphone"]},
+{"n":"sipcapture/gossipper","d":"Open-source SIP & WebRTC load-testing platform — SIPp-compatible scenarios, RTP/SRTP/WebRTC media, HTTP control API, Control UI, and HEP observability.","l":"Go","s":45,"f":7,"c":"2026-03-07","u":"2026-10-30","t":["golang","hep","load-testing","rtc"]},
+{"n":"cytechmobile/sendium","d":"The Open Source SMS Gateway","l":"Java","s":44,"f":14,"c":"2025-10-13","u":"2026-11-02","t":["gateway","kannel","message","messaging"]},
+{"n":"farbodtavakkoli/OTel","d":"Open Telco (OTel) AI: an open ecosystem of telecom models, datasets, benchmarks, and reproducible training and inference recipes. A shared AI foundation that gives operators the freedom to choose their models, software, hardware, and infrastructure.","l":"Python","s":35,"f":9,"c":"2026-02-16","u":"2026-11-01","t":["ai-agents-training","amd-rocm","apple-silicon","aws-neuron"]},
+{"n":"btsearch/btsearch","d":"BTSearch to ogólnopolska mapa stacji bazowych oraz wykazu UKE","l":"TypeScript","s":30,"f":2,"c":"2026-02-03","u":"2026-11-01","t":["bts","radio","rf","telecom"]},
+{"n":"loreste/siprec","d":"Open-source SIPREC Session Recording Server (SRS) written in Go — RFC 7865/7866 compliant, multi-vendor SBC support, AI-powered speech-to-text, and horizontally scalable","l":"Go","s":29,"f":19,"c":"2024-07-18","u":"2026-10-31","t":["call-recording","compliance","golang","rtp"]},
+{"n":"linouxis9/oxirush-nas","d":"5G (5GS) and 4G LTE (EPS) NAS messages in Rust (3GPP TS 24.501 and TS 24.301, Release 19): decode, build, validate and encode every message, edit it as JSON, and protect it with NAS security. no_std.","l":"Rust","s":20,"f":4,"c":"2025-02-27","u":"2026-11-01","t":["3gpp","4g","5g","5gc"]},
+{"n":"openairinterface/oai-cn5g-fed","d":"OpenAirInterface 5G Core Network Based on 3GPP REL 16/17","l":"Python","s":16,"f":2,"c":"2026-07-08","u":"2026-10-29","t":["3ggp","5g","5g-core","5g-core-network"]}
+]},
+{"id":"5g","name":"5G","hint":"Repos with the 5g topic, pushed in the last 14 days, 50+ stars.","matches":18,"repos":[
+{"n":"taubyte/tau","d":"Fullstack Workspace for Humans & Machines","l":"Go","s":5182,"f":234,"c":"2023-07-13","u":"2026-11-01","t":["5g","ai","cdn","cloud-computing"]},
+{"n":"open5gs/open5gs","d":"Open5GS is a C-language Open Source implementation for 5G Core and EPC, i.e. the core network of LTE/NR network (Release-19)","l":"C","s":2802,"f":1151,"c":"2017-02-01","u":"2026-11-02","t":["3gpp","4g","5g","5gc"]},
+{"n":"free5gc/free5gc","d":"Open source 5G core network based on 3GPP R17","l":"Go","s":2369,"f":765,"c":"2020-01-31","u":"2026-11-02","t":["3gpp","5g","5gc","amf"]},
+{"n":"dikeckaan/mu300-linux","d":"Linux (Ubuntu 24.04/26.04 or OpenWrt) next to Android on the ZTE F50 / MU300 and U30 Air 5G hotspots (Unisoc T760 / UMS9620): installer, vendor 5.4 and mainline 6.18 / 7.2 kernels, 5G modem, Wi-Fi, battery, LEDs, NFC, findings","l":"C","s":777,"f":123,"c":"2026-09-16","u":"2026-11-02","t":["5g","embedded-linux","linux","linux-kernel"]},
+{"n":"lynxthecat/cake-autorate","d":"Eliminate the excess latency and jitter terrorizing your 4G, 5G, LTE, Starlink or other variable rate connection!","l":"Shell","s":578,"f":44,"c":"2021-10-29","u":"2026-10-29","t":["4g","5g","cake","cake-qos-simple"]},
+{"n":"mroczis/netmonster-core","d":"Android Telephony SDK bridge with some additional features","l":"Kotlin","s":470,"f":103,"c":"2019-07-27","u":"2026-11-01","t":["4g","5g","android","lte"]},
+{"n":"omec-project/upf","d":"5G Mobile Core User Plane","l":"C++","s":231,"f":124,"c":"2019-11-01","u":"2026-11-02","t":["4g","5g","bess","cnf"]},
+{"n":"edgecomllc/eupf","d":"5G User Plane Function (UPF) based on eBPF","l":"Go","s":187,"f":39,"c":"2022-12-01","u":"2026-10-31","t":["3gpp","5g","cilium","ebpf"]},
+{"n":"intel/intel-device-plugins-for-kubernetes","d":"Collection of Intel device plugins for Kubernetes","l":"Go","s":152,"f":225,"c":"2018-05-14","u":"2026-10-29","t":["5g","cloud","cloud-computing","edge-computing"]},
+{"n":"DeepMIMO/DeepMIMO","d":"DeepMIMOv4: A Toolchain and Database for Ray-tracing Datasets.","l":"Python","s":135,"f":26,"c":"2024-11-04","u":"2026-10-28","t":["5g","6g","dataset","machine-learning"]},
+{"n":"jesther-ai/open-u60-pro","d":"ZTE U60 Pro (MU5250) 5G router toolkit — Rust on-device REST agent + native iOS/Android/web companions. Reverse-engineered, 143-endpoint coverage, OpenWrt 23.05.","l":"Rust","s":122,"f":34,"c":"2026-03-03","u":"2026-11-02","t":["5g","claude-code","jetpack-compose","openwrt"]},
+{"n":"ellanetworks/core","d":"Ella Core is a mobile core designed for private networks.","l":"Go","s":109,"f":18,"c":"2024-05-15","u":"2026-11-02","t":["4g","5g","ella","mobile"]}
+]}
+]};
