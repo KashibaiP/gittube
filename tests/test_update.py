@@ -155,7 +155,7 @@ class RunTests(unittest.TestCase):
         self.assertNotIn("g1", repo)
         self.assertNotIn("g7", repo)
         self.assertEqual(data["hist"]["o/alpha"], [["2026-11-03", 100]])
-        self.assertEqual(len(api.queries), 6)
+        self.assertEqual(len(api.queries), 12)  # each lane is searched twice
 
     def test_second_day_shows_gain(self):
         update.run(FakeAPI(), at("2026-11-03"), self.out, pause=0)
