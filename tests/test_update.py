@@ -74,6 +74,23 @@ class FilterTests(unittest.TestCase):
         self.assertTrue(update.blocked(item("o/x", 1, topics=["nsfw"])))
         self.assertFalse(update.blocked(item("o/x", 1)))
 
+    def test_fake_installer_spam_is_blocked(self):
+        self.assertTrue(update.blocked(item(
+            "o/office", 1, description="Complete standalone setup, full pre-activation")))
+        self.assertTrue(update.blocked(item(
+            "o/fl", 1, description="Fl Studio 2026 - Full working installer")))
+
+    def test_star_farmed_repos_with_stuffed_topics_are_blocked(self):
+        spam = item("o/s", 312, forks_count=0, topics=[f"t{i}" for i in range(20)])
+        self.assertTrue(update.blocked(spam))
+
+    def test_real_repos_with_many_topics_or_no_forks_are_kept(self):
+        many = item("o/m", 312, forks_count=0, topics=[f"t{i}" for i in range(12)])
+        popular = item("o/p", 312, forks_count=40, topics=[f"t{i}" for i in range(20)])
+        young = item("o/y", 30, forks_count=0, topics=[f"t{i}" for i in range(20)])
+        for r in (many, popular, young):
+            self.assertFalse(update.blocked(r))
+
 
 class HistoryTests(unittest.TestCase):
     def test_update_history_adds_today_and_keeps_order(self):
