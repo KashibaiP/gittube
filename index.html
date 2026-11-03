@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GitTube</title>
+<link rel="alternate" type="application/rss+xml" title="GitTube weekly digest" href="feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -133,6 +134,7 @@ footer code{font-family:var(--mono);font-size:13px}
     <p id="how"></p>
     <p>Data comes from the GitHub repository search API. <code>scripts/update.py</code> rewrites <code>data.js</code> once a day and keeps a snapshot of each repo's star count. The "today" gain compares the latest snapshot with the previous day's, and "this week" with one from a week earlier, so they appear after the second daily refresh and after the eighth.</p>
     <p>Lanes you add yourself are searched live on GitHub from your browser and saved only in this browser (no account, nothing sent to us). GitHub allows about 10 anonymous searches a minute, so a rate-limit message just means wait a bit.</p>
+    <p>Weekly digest: <a href="feed.xml">feed.xml</a> is an RSS feed with one entry per week (the fastest risers and the top of each lane). Add its address to any RSS reader, or to a free service that turns RSS into email.</p>
     <p>Stars and forks are counts at the time of the last refresh. Repos that mention certain adult-content words are left out.</p>
   </footer>
 </div>
