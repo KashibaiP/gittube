@@ -31,6 +31,7 @@ h1 span{color:var(--accent)}
 .lede{margin:10px 0 0;color:var(--muted);max-width:60ch}
 
 .controls{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+@media (max-width:640px){.controls{position:static}}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 input[type=search],select{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-width:0}
 input[type=search]{flex:1 1 200px}
@@ -48,6 +49,9 @@ select{flex:0 0 auto}
 .addlane input{flex:1 1 220px;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 11px;min-width:0}
 .addlane button{font:inherit;font-size:14px;border:0;cursor:pointer;background:var(--accent);color:var(--accent-fg);padding:8px 14px;border-radius:6px}
 .addlane button:disabled{opacity:.55;cursor:default}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;padding:6px 4px}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.clear{font:inherit;font-size:14px;border:0;background:none;color:var(--accent);cursor:pointer;padding:6px 4px;text-decoration:underline}
 .lmsg{font-size:13px;color:var(--muted);min-height:1.2em}
 .lmsg.err{color:#b42318}
 @media (prefers-color-scheme:dark){.lmsg.err{color:#ff8a80}}
@@ -99,6 +103,17 @@ footer code{font-family:var(--mono);font-size:13px}
         <option value="created">Newest</option>
         <option value="updated">Recently updated</option>
       </select>
+      <select id="f-lang" aria-label="Filter by language"><option value="">Any language</option></select>
+      <select id="f-stars" aria-label="Minimum stars">
+        <option value="0">Any stars</option>
+        <option value="10">10+ stars</option>
+        <option value="50">50+ stars</option>
+        <option value="100">100+ stars</option>
+        <option value="500">500+ stars</option>
+        <option value="1000">1,000+ stars</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="f-gfi"> Good first issues</label>
+      <button type="button" class="clear" id="f-clear" hidden>Clear filters</button>
     </div>
     <div class="chips" id="chips" role="group" aria-label="Lanes"></div>
     <form class="addlane" id="addlane" autocomplete="off">
@@ -137,24 +152,21 @@ footer code{font-family:var(--mono);font-size:13px}
   }
 
   // Lanes = the ones in data.js plus the visitor's own (custom), fetched live from GitHub.
-  var custom=[],byName={},all=[],laneById={},order=[];
+  var custom=[],laneById={},order=[];
   function lanes(){return D.lanes.concat(custom)}
   function rebuild(){
-    byName={};all=[];laneById={};
-    lanes().forEach(function(L){
-      laneById[L.id]=L;
-      (L.repos||[]).forEach(function(r){
-        if(!byName[r.n]){byName[r.n]=r;r.lane=L.id;all.push(r)}
-      });
-    });
+    laneById={};
+    lanes().forEach(function(L){laneById[L.id]=L});
     order=["all"].concat(lanes().map(function(L){return L.id}));
   }
   rebuild();
-  var state={lane:"all",q:"",s:"stars"};
+  var state={lane:"all",q:"",s:"stars",lang:"",min:0,gfi:false};
+  var fLang=document.getElementById("f-lang"),fStars=document.getElementById("f-stars"),
+      fGfi=document.getElementById("f-gfi"),fClear=document.getElementById("f-clear");
   stamp.textContent="data from "+fmt(D.generated)+(D.at?", "+D.at.slice(11,16)+" UTC":"");
 
   // Momentum: stars gained since the previous daily snapshot (g1) and over a week (g7).
-  var hasGain=all.some(function(r){return r.g1!=null});
+  var hasGain=D.lanes.some(function(L){return L.repos.concat(L.gfi||[]).some(function(r){return r.g1!=null})});
   if(!hasGain){
     var go=sort.querySelector('option[value="gain"]');
     go.disabled=true;go.textContent="Most gained today (after 2 daily refreshes)";
@@ -170,20 +182,44 @@ footer code{font-family:var(--mono);font-size:13px}
     return out;
   }
 
-  function pool(){return state.lane==="all"?all:laneById[state.lane].repos}
+  // What a lane lists right now: its normal repos, or its "good first issues" repos when that filter is on.
+  function listFor(L){return state.gfi?(L.gfi||[]):(L.repos||[])}
+  function passes(r,skipLang){return r.s>=state.min&&(skipLang||!state.lang||r.l===state.lang)}
+  // Repos for the selected lane (or all lanes, duplicates removed), after the filters.
+  function entries(skipLang){
+    var seen={},out=[];
+    (state.lane==="all"?lanes():[laneById[state.lane]]).forEach(function(L){
+      listFor(L).forEach(function(r){
+        if(seen[r.n]||!passes(r,skipLang))return;
+        seen[r.n]=1;out.push({r:r,lane:L.id});
+      });
+    });
+    return out;
+  }
+  function chipCount(L){
+    if(L){
+      if(L.status==="loading"||(state.gfi&&L.gstatus==="loading"))return "…";
+      if(L.status==="error"||(state.gfi&&L.gstatus==="error"))return "!";
+      return String(listFor(L).filter(function(r){return passes(r)}).length);
+    }
+    var seen={},n=0;
+    lanes().forEach(function(M){listFor(M).forEach(function(r){if(!seen[r.n]&&passes(r)){seen[r.n]=1;n++}})});
+    return String(n);
+  }
 
   function renderChips(){
     chips.textContent="";
     order.forEach(function(k){
       var L=k==="all"?null:laneById[k];
       var name=L?L.name:"All lanes";
-      var n=L?(L.status==="loading"?"…":L.status==="error"?"!":String(L.repos.length)):String(all.length);
+      var n=chipCount(L);
       var b=el("button","chip"+(L&&L.def?" mine":""),name+" ");b.type="button";
       b.setAttribute("aria-pressed",String(state.lane===k));
       b.appendChild(el("b",null,n));
       b.addEventListener("click",function(){
         state.lane=k;
         if(L&&L.status==="error")loadLane(L);
+        else if(L&&state.gfi&&L.gstatus==="error")ensureGfi(L);
         render();
       });
       if(L&&L.def){
@@ -252,6 +288,18 @@ footer code{font-family:var(--mono);font-size:13px}
     }).then(function(){rebuild();render()});
   }
 
+  // Your own lanes have no "good first issues" list until the filter is first used; then it is fetched, one search at a time.
+  var gfiQueue=Promise.resolve();
+  function ensureGfi(L){
+    if(!L.def||L.gfi||L.gstatus==="loading")return;
+    L.gstatus="loading";render();
+    gfiQueue=gfiQueue.then(function(){return search(L.def.q+" good-first-issues:>0")}).then(function(r){
+      L.gfi=r.repos;L.gmatches=r.matches;L.gstatus="ok";L.gerr="";
+    }).catch(function(e){
+      L.gstatus="error";L.gerr=(e&&e.message&&e.message!=="Failed to fetch")?e.message:"Could not reach GitHub. Check your connection.";
+    }).then(function(){render()});
+  }
+
   function saveDefs(){
     try{localStorage.setItem(KEY,JSON.stringify(custom.map(function(L){return L.def.text})))}catch(e){}
   }
@@ -289,6 +337,7 @@ footer code{font-family:var(--mono);font-size:13px}
       var L=makeLane(d);L.matches=r.matches;L.repos=r.repos;L.status="ok";
       custom.push(L);saveDefs();rebuild();
       state.lane=L.id;laneIn.value="";say("");render();
+      if(state.gfi)ensureGfi(L);
     }).catch(function(err){
       say(err&&err.message&&err.message!=="Failed to fetch"?err.message:"Could not reach GitHub. Check your connection.",true);
     }).then(function(){laneAdd.disabled=false});
@@ -347,26 +396,68 @@ footer code{font-family:var(--mono);font-size:13px}
     var s=state.q.trim().toLowerCase();
     var key={stars:"s",gain:"g1",forks:"f",created:"c",updated:"u"}[state.s];
     function val(r){return r[key]==null?-Infinity:r[key]}
-    var list=pool().filter(function(r){
+    var list=entries(false).filter(function(e){
+      var r=e.r;
       if(!s)return true;
       return (r.n+" "+r.d+" "+r.l+" "+(r.t||[]).join(" ")).toLowerCase().indexOf(s)>-1;
-    }).slice().sort(function(a,b){
-      var x=val(a),y=val(b);
-      return x<y?1:x>y?-1:b.s-a.s;
+    }).sort(function(a,b){
+      var x=val(a.r),y=val(b.r);
+      return x<y?1:x>y?-1:b.r.s-a.r.s;
     });
+    updateLangs();
+    var filtered=!!(state.lang||state.min||state.gfi);
+    fClear.hidden=!filtered;
     grid.textContent="";
-    if(!list.length)grid.appendChild(el("div","empty","No repos match. Clear the search or pick another lane."));
-    list.forEach(function(r){grid.appendChild(card(r,state.lane==="all"?r.lane:state.lane))});
+    // data.js written before this feature has no good-first-issues lists; say so instead of looking broken
+    var waiting=state.gfi&&(state.lane==="all"?D.lanes.every(function(L){return !L.gfi}):(!laneById[state.lane].def&&!laneById[state.lane].gfi));
+    if(!list.length)grid.appendChild(el("div","empty",waiting
+      ?"Good first issues data for this lane appears after the next daily refresh. Your own lanes already support it."
+      :filtered
+      ?"No repos match these filters. Clear the filters or pick another lane."
+      :"No repos match. Clear the search or pick another lane."));
+    list.forEach(function(e){grid.appendChild(card(e.r,e.lane))});
     count.textContent=list.length+" repos shown";
+    var extra=(state.gfi?" Showing only repos with open good first issues.":"")+(state.min?" Minimum "+nf.format(state.min)+" stars.":"")+(state.lang?" Language: "+state.lang+".":"");
     if(state.lane==="all"){
-      how.textContent="All lanes combines the lists below with duplicates removed.";
+      how.textContent="All lanes combines the lists below with duplicates removed."+extra;
     }else{
       var L=laneById[state.lane];
       if(L.status==="loading")how.textContent=L.hint+" Loading from GitHub…";
       else if(L.status==="error")how.textContent="Could not load this lane: "+L.err+" Click its chip to try again, or remove it.";
-      else how.textContent=L.hint+" "+nf.format(L.matches)+" repos match this search on GitHub; the top "+L.repos.length+" are shown."+(L.def?" This is your own lane, saved in this browser and fetched live.":"");
+      else if(state.gfi&&L.gstatus==="loading")how.textContent=L.hint+" Looking for repos with good first issues…";
+      else if(state.gfi&&L.gstatus==="error")how.textContent="Could not load good first issues for this lane: "+L.gerr+" Click its chip to try again.";
+      else if(state.gfi)how.textContent=L.hint+" "+nf.format(L.gmatches==null?listFor(L).length:L.gmatches)+" of these repos have open good first issues; the top "+listFor(L).length+" are listed."+(state.min?" Minimum "+nf.format(state.min)+" stars.":"")+(state.lang?" Language: "+state.lang+".":"");
+      else how.textContent=L.hint+" "+nf.format(L.matches)+" repos match this search on GitHub; the top "+L.repos.length+" are shown."+(L.def?" This is your own lane, saved in this browser and fetched live.":"")+(state.min?" Minimum "+nf.format(state.min)+" stars.":"")+(state.lang?" Language: "+state.lang+".":"");
     }
   }
+
+  // Language dropdown: the languages present in the current lane, with counts. The chosen one always stays listed.
+  var langSig="";
+  function updateLangs(){
+    var counts={};
+    entries(true).forEach(function(e){if(e.r.l)counts[e.r.l]=(counts[e.r.l]||0)+1});
+    if(state.lang&&counts[state.lang]==null)counts[state.lang]=0;
+    var names=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a]||a.localeCompare(b)});
+    var sig=names.map(function(n){return n+":"+counts[n]}).join("|")+"#"+state.lang;
+    if(sig===langSig)return;
+    langSig=sig;
+    fLang.textContent="";
+    var first=el("option",null,"Any language");first.value="";fLang.appendChild(first);
+    names.forEach(function(n){var o=el("option",null,n+" ("+counts[n]+")");o.value=n;fLang.appendChild(o)});
+    fLang.value=state.lang;
+  }
+  fLang.addEventListener("change",function(){state.lang=fLang.value;render()});
+  fStars.addEventListener("change",function(){state.min=Number(fStars.value)||0;render()});
+  fGfi.addEventListener("change",function(){
+    state.gfi=fGfi.checked;
+    if(state.gfi)custom.forEach(ensureGfi);
+    render();
+  });
+  fClear.addEventListener("click",function(){
+    state.lang="";state.min=0;state.gfi=false;
+    fStars.value="0";fGfi.checked=false;
+    render();
+  });
 
   q.addEventListener("input",function(){state.q=q.value;render()});
   sort.addEventListener("change",function(){state.s=sort.value;render()});

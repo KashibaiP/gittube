@@ -21,6 +21,7 @@ KEEP = 12          # repos kept per lane
 HIST_DAYS = 14     # how long star snapshots are kept
 BLOCKED = ("nsfw", "porn", "pre-activat", "keygen", "cracked", "full working installer")
 # repos mentioning these words are left out
+GFI = " good-first-issues:>0"  # search qualifier: repos with open good-first-issue issues
 PREFIX = "window.GITTUBE = "
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data.js")
 
@@ -123,7 +124,7 @@ def bootstrap_history(prev):
     if not date:
         return hist
     for lane in prev.get("lanes", []):
-        for repo in lane.get("repos", []):
+        for repo in lane.get("repos", []) + lane.get("gfi", []):
             hist.setdefault(repo["n"], [[date, repo["s"]]])
     return hist
 
@@ -165,20 +166,29 @@ def run(fetch_fn=fetch, now=None, out=OUT, pause=2):
     prev = load_previous(out)
     prev_hist = prev.get("hist") or bootstrap_history(prev)
 
+    def pick(data):
+        return [slim(i) for i in data["items"]
+                if not i.get("archived") and not blocked(i)][:KEEP]
+
     lanes = []
     for lane in build_lanes(now):
         data = fetch_fn(lane["q"])
-        repos = [slim(i) for i in data["items"]
-                 if not i.get("archived") and not blocked(i)][:KEEP]
+        repos = pick(data)
+        if pause:
+            time.sleep(pause)  # stay well inside the search rate limit
+        # same search, limited to repos that have open "good first issue" issues
+        gdata = fetch_fn(lane["q"] + GFI)
+        gfi = pick(gdata)
         lanes.append({
             "id": lane["id"], "name": lane["name"], "hint": lane["hint"],
             "matches": data.get("total_count", len(repos)), "repos": repos,
+            "gmatches": gdata.get("total_count", len(gfi)), "gfi": gfi,
         })
-        print(f"{lane['id']}: {len(repos)} repos of {data.get('total_count')}")
+        print(f"{lane['id']}: {len(repos)} repos of {data.get('total_count')}, {len(gfi)} with good first issues")
         if pause:
-            time.sleep(pause)  # stay well inside the search rate limit
+            time.sleep(pause)
 
-    every = [r for lane in lanes for r in lane["repos"]]
+    every = [r for lane in lanes for r in lane["repos"] + lane["gfi"]]
     hist = update_history(prev_hist, every, today)
     for repo in every:
         entries = hist[repo["n"]]
