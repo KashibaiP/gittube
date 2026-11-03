@@ -52,6 +52,9 @@ select{flex:0 0 auto}
 .chk{display:inline-flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;padding:6px 4px}
 .chk input{width:16px;height:16px;accent-color:var(--accent)}
 .clear{font:inherit;font-size:14px;border:0;background:none;color:var(--accent);cursor:pointer;padding:6px 4px;text-decoration:underline}
+.save{font:inherit;font-size:13px;border:1px solid var(--line);background:none;color:var(--fg);padding:2px 9px;border-radius:4px;cursor:pointer}
+.save:hover{border-color:var(--accent)}
+.save[aria-pressed=true]{color:var(--accent);border-color:var(--accent);font-weight:600}
 .lmsg{font-size:13px;color:var(--muted);min-height:1.2em}
 .lmsg.err{color:#b42318}
 @media (prefers-color-scheme:dark){.lmsg.err{color:#ff8a80}}
@@ -143,7 +146,7 @@ footer code{font-family:var(--mono);font-size:13px}
   function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
   if(!D||!D.lanes){grid.appendChild(el("div","empty","data.js did not load. Run scripts/update.py or reload the page."));return}
 
-  var HUES={today:340,week:222,python:205,rust:22,telecom:160,"5g":285};
+  var HUES={today:340,week:222,python:205,rust:22,telecom:160,"5g":285,saved:45};
   var nf=new Intl.NumberFormat("en");
   function fmt(iso){
     if(!iso)return "";
@@ -152,12 +155,39 @@ footer code{font-family:var(--mono);font-size:13px}
   }
 
   // Lanes = the ones in data.js plus the visitor's own (custom), fetched live from GitHub.
-  var custom=[],laneById={},order=[];
+  var custom=[],laneById={};
   function lanes(){return D.lanes.concat(custom)}
+
+  // ---- save for later: bookmarks kept in this browser only --------------------
+  var SKEY="gittube.saved",SMAX=100;
+  function cleanRepo(x){  // accepts anything; returns a safe repo object or null
+    if(!x||typeof x!=="object"||typeof x.n!=="string"||!/^[\w.-]+\/[\w.-]+$/.test(x.n))return null;
+    function s(v,m){return typeof v==="string"?v.slice(0,m):""}
+    function n(v){return typeof v==="number"&&isFinite(v)&&v>=0?v:0}
+    return {n:x.n,d:s(x.d,300),l:s(x.l,40),s:n(x.s),f:n(x.f),c:s(x.c,10),u:s(x.u,10),
+      t:Array.isArray(x.t)?x.t.filter(function(t){return typeof t==="string"}).slice(0,4).map(function(t){return t.slice(0,50)}):[]};
+  }
+  function loadSaved(){
+    try{
+      var v=JSON.parse(localStorage.getItem(SKEY)||"[]");
+      if(!Array.isArray(v))return [];
+      var seen={};
+      return v.map(cleanRepo).filter(function(r){if(!r||seen[r.n])return false;seen[r.n]=1;return true}).slice(0,SMAX);
+    }catch(e){return []}
+  }
+  function persistSaved(){try{localStorage.setItem(SKEY,JSON.stringify(saved))}catch(e){}}
+  var saved=loadSaved();
+  var savedLane={id:"saved",name:"Saved",hint:"Repos you saved in this browser.",status:"ok",repos:[],matches:0};
+  function isSaved(name){return saved.some(function(r){return r.n===name})}
+
   function rebuild(){
     laneById={};
     lanes().forEach(function(L){laneById[L.id]=L});
-    order=["all"].concat(lanes().map(function(L){return L.id}));
+    // Saved repos show today's numbers when the repo is in the current data, else the numbers from when it was saved.
+    var known={};
+    lanes().forEach(function(L){(L.repos||[]).concat(L.gfi||[]).forEach(function(r){if(!known[r.n])known[r.n]=r})});
+    savedLane.repos=saved.map(function(r){return known[r.n]||r});
+    laneById.saved=savedLane;
   }
   rebuild();
   var state={lane:"all",q:"",s:"stars",lang:"",min:0,gfi:false};
@@ -183,7 +213,7 @@ footer code{font-family:var(--mono);font-size:13px}
   }
 
   // What a lane lists right now: its normal repos, or its "good first issues" repos when that filter is on.
-  function listFor(L){return state.gfi?(L.gfi||[]):(L.repos||[])}
+  function listFor(L){return state.gfi&&L.id!=="saved"?(L.gfi||[]):(L.repos||[])}
   function passes(r,skipLang){return r.s>=state.min&&(skipLang||!state.lang||r.l===state.lang)}
   // Repos for the selected lane (or all lanes, duplicates removed), after the filters.
   function entries(skipLang){
@@ -209,6 +239,8 @@ footer code{font-family:var(--mono);font-size:13px}
 
   function renderChips(){
     chips.textContent="";
+    // the Saved chip appears once something is saved (and stays while you are looking at it)
+    var order=["all"].concat(saved.length||state.lane==="saved"?["saved"]:[]).concat(lanes().map(function(L){return L.id}));
     order.forEach(function(k){
       var L=k==="all"?null:laneById[k];
       var name=L?L.name:"All lanes";
@@ -318,6 +350,24 @@ footer code{font-family:var(--mono);font-size:13px}
   }
   function say(msg,bad){laneMsg.textContent=msg||"";laneMsg.className="lmsg"+(bad?" err":"")}
 
+  function toggleSave(r){
+    if(isSaved(r.n)){
+      saved=saved.filter(function(x){return x.n!==r.n});
+    }else{
+      if(saved.length>=SMAX)return say("You can save up to "+SMAX+" repos. Remove one first.",true);
+      var c=cleanRepo(r);if(!c)return;
+      saved.unshift(c);say("");
+    }
+    persistSaved();rebuild();render();
+    // the grid was redrawn: put keyboard focus back on this repo's button, if it is still listed
+    var again=grid.querySelectorAll(".save");
+    for(var i=0;i<again.length;i++)if(again[i].getAttribute("data-repo")===r.n){again[i].focus();break}
+  }
+  // another tab of this site changed the saved list
+  window.addEventListener("storage",function(e){
+    if(e.key===SKEY){saved=loadSaved();rebuild();render()}
+  });
+
   function removeLane(id){
     custom=custom.filter(function(L){return L.id!==id});
     if(state.lane===id)state.lane="all";
@@ -382,6 +432,12 @@ footer code{font-family:var(--mono);font-size:13px}
     m.appendChild(el("span",null,"created "+fmt(r.c)));
     m.appendChild(el("span",null,"updated "+fmt(r.u)));
     if(/^[\w.-]+\/[\w.-]+$/.test(r.n)){
+      var on=isSaved(r.n);
+      var sv=el("button","save",on?"★ Saved":"☆ Save");sv.type="button";
+      sv.setAttribute("aria-pressed",String(on));sv.setAttribute("data-repo",r.n);
+      sv.setAttribute("aria-label",(on?"Remove ":"Save ")+r.n+(on?" from saved":" for later"));
+      sv.addEventListener("click",function(){toggleSave(r)});
+      m.appendChild(sv);
       var a=el("a","go","Open on GitHub ↗");
       a.href="https://github.com/"+r.n;a.target="_blank";a.rel="noopener";
       a.setAttribute("aria-label","Open "+r.n+" on GitHub");
@@ -409,8 +465,10 @@ footer code{font-family:var(--mono);font-size:13px}
     fClear.hidden=!filtered;
     grid.textContent="";
     // data.js written before this feature has no good-first-issues lists; say so instead of looking broken
-    var waiting=state.gfi&&(state.lane==="all"?D.lanes.every(function(L){return !L.gfi}):(!laneById[state.lane].def&&!laneById[state.lane].gfi));
-    if(!list.length)grid.appendChild(el("div","empty",waiting
+    var waiting=state.gfi&&state.lane!=="saved"&&(state.lane==="all"?D.lanes.every(function(L){return !L.gfi}):(!laneById[state.lane].def&&!laneById[state.lane].gfi));
+    if(!list.length)grid.appendChild(el("div","empty",state.lane==="saved"&&!saved.length
+      ?"Nothing saved yet. Use ☆ Save on any card and it will show up here."
+      :waiting
       ?"Good first issues data for this lane appears after the next daily refresh. Your own lanes already support it."
       :filtered
       ?"No repos match these filters. Clear the filters or pick another lane."
@@ -424,6 +482,7 @@ footer code{font-family:var(--mono);font-size:13px}
       var L=laneById[state.lane];
       if(L.status==="loading")how.textContent=L.hint+" Loading from GitHub…";
       else if(L.status==="error")how.textContent="Could not load this lane: "+L.err+" Click its chip to try again, or remove it.";
+      else if(L.id==="saved")how.textContent=L.hint+" "+saved.length+" saved, stored only in this browser."+(state.gfi?" The good-first-issues filter does not apply here.":"")+(state.min?" Minimum "+nf.format(state.min)+" stars.":"")+(state.lang?" Language: "+state.lang+".":"");
       else if(state.gfi&&L.gstatus==="loading")how.textContent=L.hint+" Looking for repos with good first issues…";
       else if(state.gfi&&L.gstatus==="error")how.textContent="Could not load good first issues for this lane: "+L.gerr+" Click its chip to try again.";
       else if(state.gfi)how.textContent=L.hint+" "+nf.format(L.gmatches==null?listFor(L).length:L.gmatches)+" of these repos have open good first issues; the top "+listFor(L).length+" are listed."+(state.min?" Minimum "+nf.format(state.min)+" stars.":"")+(state.lang?" Language: "+state.lang+".":"");
