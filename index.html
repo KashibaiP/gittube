@@ -40,6 +40,17 @@ select{flex:0 0 auto}
 .chip{flex:0 0 auto;font:inherit;font-size:14px;border:0;cursor:pointer;background:var(--chip);color:var(--chip-fg);padding:7px 12px;border-radius:999px;white-space:nowrap}
 .chip b{font-family:var(--mono);font-weight:500;font-size:12px;opacity:.7}
 .chip[aria-pressed=true]{background:var(--accent);color:var(--accent-fg)}
+.cl{flex:0 0 auto;display:inline-flex;align-items:center;gap:2px}
+.chip.mine{border-radius:999px 0 0 999px;padding-right:8px}
+.rm{flex:0 0 auto;font:inherit;font-size:14px;line-height:1;border:0;cursor:pointer;background:var(--chip);color:var(--muted);padding:7px 10px 7px 6px;border-radius:0 999px 999px 0}
+.rm:hover{color:var(--fg)}
+.addlane{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.addlane input{flex:1 1 220px;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 11px;min-width:0}
+.addlane button{font:inherit;font-size:14px;border:0;cursor:pointer;background:var(--accent);color:var(--accent-fg);padding:8px 14px;border-radius:6px}
+.addlane button:disabled{opacity:.55;cursor:default}
+.lmsg{font-size:13px;color:var(--muted);min-height:1.2em}
+.lmsg.err{color:#b42318}
+@media (prefers-color-scheme:dark){.lmsg.err{color:#ff8a80}}
 
 .count{margin:14px 0 10px;color:var(--muted);font-size:14px}
 .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
@@ -90,6 +101,11 @@ footer code{font-family:var(--mono);font-size:13px}
       </select>
     </div>
     <div class="chips" id="chips" role="group" aria-label="Lanes"></div>
+    <form class="addlane" id="addlane" autocomplete="off">
+      <input type="text" id="lane-in" maxlength="40" placeholder="Add your own lane: a language or topic, e.g. Go, 6g, open-ran" aria-label="Add your own lane">
+      <button type="submit" id="lane-add">Add lane</button>
+      <span class="lmsg" id="lane-msg" role="status" aria-live="polite"></span>
+    </form>
   </div>
 
   <div class="count" id="count" aria-live="polite"></div>
@@ -98,6 +114,7 @@ footer code{font-family:var(--mono);font-size:13px}
   <footer>
     <p id="how"></p>
     <p>Data comes from the GitHub repository search API. <code>scripts/update.py</code> rewrites <code>data.js</code> once a day and keeps a snapshot of each repo's star count. The "today" gain compares the latest snapshot with the previous day's, and "this week" with one from a week earlier, so they appear after the second daily refresh and after the eighth.</p>
+    <p>Lanes you add yourself are searched live on GitHub from your browser and saved only in this browser (no account, nothing sent to us). GitHub allows about 10 anonymous searches a minute, so a rate-limit message just means wait a bit.</p>
     <p>Stars and forks are counts at the time of the last refresh. Repos that mention certain adult-content words are left out.</p>
   </footer>
 </div>
@@ -119,14 +136,20 @@ footer code{font-family:var(--mono);font-size:13px}
     return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
   }
 
-  var byName={},all=[];
-  D.lanes.forEach(function(L){
-    L.repos.forEach(function(r,i){
-      if(!byName[r.n]){byName[r.n]=r;r.lane=L.id;all.push(r)}
+  // Lanes = the ones in data.js plus the visitor's own (custom), fetched live from GitHub.
+  var custom=[],byName={},all=[],laneById={},order=[];
+  function lanes(){return D.lanes.concat(custom)}
+  function rebuild(){
+    byName={};all=[];laneById={};
+    lanes().forEach(function(L){
+      laneById[L.id]=L;
+      (L.repos||[]).forEach(function(r){
+        if(!byName[r.n]){byName[r.n]=r;r.lane=L.id;all.push(r)}
+      });
     });
-  });
-  var order=["all"].concat(D.lanes.map(function(L){return L.id}));
-  var laneById={};D.lanes.forEach(function(L){laneById[L.id]=L});
+    order=["all"].concat(lanes().map(function(L){return L.id}));
+  }
+  rebuild();
   var state={lane:"all",q:"",s:"stars"};
   stamp.textContent="data from "+fmt(D.generated)+(D.at?", "+D.at.slice(11,16)+" UTC":"");
 
@@ -152,14 +175,131 @@ footer code{font-family:var(--mono);font-size:13px}
   function renderChips(){
     chips.textContent="";
     order.forEach(function(k){
-      var name=k==="all"?"All lanes":laneById[k].name;
-      var n=k==="all"?all.length:laneById[k].repos.length;
-      var b=el("button","chip",name+" ");b.type="button";
+      var L=k==="all"?null:laneById[k];
+      var name=L?L.name:"All lanes";
+      var n=L?(L.status==="loading"?"…":L.status==="error"?"!":String(L.repos.length)):String(all.length);
+      var b=el("button","chip"+(L&&L.def?" mine":""),name+" ");b.type="button";
       b.setAttribute("aria-pressed",String(state.lane===k));
-      b.appendChild(el("b",null,String(n)));
-      b.addEventListener("click",function(){state.lane=k;render()});
-      chips.appendChild(b);
+      b.appendChild(el("b",null,n));
+      b.addEventListener("click",function(){
+        state.lane=k;
+        if(L&&L.status==="error")loadLane(L);
+        render();
+      });
+      if(L&&L.def){
+        var w=el("span","cl");w.appendChild(b);
+        var x=el("button","rm","×");x.type="button";
+        x.setAttribute("aria-label","Remove lane "+L.name);
+        x.addEventListener("click",function(){removeLane(L.id)});
+        w.appendChild(x);chips.appendChild(w);
+      }else chips.appendChild(b);
     });
+  }
+
+  // ---- your own lanes ----------------------------------------------------
+  var API="https://api.github.com/search/repositories",KEY="gittube.lanes",MAX=8,KEEP=12;
+  var LANGS="python rust go java javascript typescript c c++ c# kotlin swift ruby php scala zig dart lua haskell elixir r julia shell perl ocaml clojure erlang nim crystal solidity vue html css".split(" ");
+  var BLOCKED=["nsfw","porn","pre-activat","keygen","cracked","full working installer"];
+  var addForm=document.getElementById("addlane"),laneIn=document.getElementById("lane-in"),
+      laneAdd=document.getElementById("lane-add"),laneMsg=document.getElementById("lane-msg");
+
+  function ago(days){return new Date(Date.now()-days*864e5).toISOString().slice(0,10)}
+
+  // Turns what the visitor typed into a lane definition, or an error message.
+  // "go" -> language lane; "6g" -> topic lane; "lang:x" / "topic:x" force the kind.
+  function parseLane(text){
+    var t=String(text||"").trim();
+    if(!t)return {err:"Type a language or topic first."};
+    var kind=null,m=/^(lang|language|topic):(.*)$/i.exec(t);
+    if(m){kind=m[1].toLowerCase()==="topic"?"topic":"language";t=m[2].trim()}
+    var term=t.toLowerCase().replace(/\s+/g,"-");
+    if(!/^[a-z0-9][a-z0-9+#._-]{0,38}$/.test(term))return {err:"Use letters, numbers and + # . - _ only (max 39 characters)."};
+    if(!kind)kind=LANGS.indexOf(term)>-1?"language":"topic";
+    var q=kind==="language"?"language:"+term+" created:>"+ago(30):"topic:"+term+" pushed:>"+ago(14);
+    return {id:kind+":"+term,kind:kind,term:term,text:kind+":"+t,q:q,
+      name:kind==="topic"?"#"+term:t,
+      hint:kind==="language"?t+" repos created in the last 30 days, most starred first."
+        :"Repos with the "+term+" topic, pushed in the last 14 days, most starred first."};
+  }
+
+  function isSpam(i){
+    var text=((i.full_name||"")+" "+(i.description||"")+" "+(i.topics||[]).join(" ")).toLowerCase();
+    if(BLOCKED.some(function(w){return text.indexOf(w)>-1}))return true;
+    return (i.topics||[]).length>=20&&i.forks_count===0&&i.stargazers_count>=100;
+  }
+  function slim(i){
+    return {n:i.full_name,d:i.description||"",l:i.language||"",s:i.stargazers_count,f:i.forks_count,
+      c:(i.created_at||"").slice(0,10),u:(i.updated_at||"").slice(0,10),t:(i.topics||[]).slice(0,4)};
+  }
+  function search(q){
+    return fetch(API+"?q="+encodeURIComponent(q)+"&sort=stars&order=desc&per_page="+(KEEP+6),
+      {headers:{Accept:"application/vnd.github+json"}}).then(function(res){
+      if(res.status===403||res.status===429)throw new Error("GitHub's rate limit was reached. Try again in a minute.");
+      if(!res.ok)throw new Error("GitHub returned an error ("+res.status+").");
+      return res.json();
+    }).then(function(j){
+      var items=(j.items||[]).filter(function(i){return !i.archived&&!isSpam(i)});
+      return {matches:j.total_count||0,repos:items.slice(0,KEEP).map(slim)};
+    });
+  }
+
+  function loadLane(L){
+    L.status="loading";render();
+    return search(L.def.q).then(function(r){
+      L.matches=r.matches;L.repos=r.repos;L.status="ok";L.err="";
+    }).catch(function(e){
+      L.status="error";L.err=(e&&e.message&&e.message!=="Failed to fetch")?e.message:"Could not reach GitHub. Check your connection.";
+    }).then(function(){rebuild();render()});
+  }
+
+  function saveDefs(){
+    try{localStorage.setItem(KEY,JSON.stringify(custom.map(function(L){return L.def.text})))}catch(e){}
+  }
+  function loadDefs(){
+    try{
+      var v=JSON.parse(localStorage.getItem(KEY)||"[]");
+      if(!Array.isArray(v))return [];
+      var seen={};
+      return v.filter(function(x){return typeof x==="string"}).map(parseLane).filter(function(d){
+        if(d.err||seen[d.id])return false;seen[d.id]=1;return true;
+      }).slice(0,MAX);
+    }catch(e){return []}
+  }
+  function makeLane(d){
+    return {id:d.id,name:d.name,hint:d.hint,matches:0,repos:[],status:"loading",err:"",def:d};
+  }
+  function say(msg,bad){laneMsg.textContent=msg||"";laneMsg.className="lmsg"+(bad?" err":"")}
+
+  function removeLane(id){
+    custom=custom.filter(function(L){return L.id!==id});
+    if(state.lane===id)state.lane="all";
+    saveDefs();rebuild();render();
+  }
+
+  addForm.addEventListener("submit",function(e){
+    e.preventDefault();
+    var d=parseLane(laneIn.value);
+    if(d.err)return say(d.err,true);
+    if(lanes().some(function(L){return L.id===d.id||L.name.toLowerCase()===d.name.toLowerCase()||L.id===d.term}))
+      return say("That lane already exists.",true);
+    if(custom.length>=MAX)return say("You can keep up to "+MAX+" lanes of your own. Remove one first.",true);
+    laneAdd.disabled=true;say("Searching GitHub…");
+    search(d.q).then(function(r){
+      if(!r.repos.length)return say("No repos found for "+d.name+". Try a different spelling.",true);
+      var L=makeLane(d);L.matches=r.matches;L.repos=r.repos;L.status="ok";
+      custom.push(L);saveDefs();rebuild();
+      state.lane=L.id;laneIn.value="";say("");render();
+    }).catch(function(err){
+      say(err&&err.message&&err.message!=="Failed to fetch"?err.message:"Could not reach GitHub. Check your connection.",true);
+    }).then(function(){laneAdd.disabled=false});
+  });
+
+  function restoreLanes(){
+    custom=loadDefs().map(makeLane);
+    if(!custom.length)return;
+    rebuild();render();
+    // one at a time, so a visitor with several lanes stays inside GitHub's search rate limit
+    custom.reduce(function(p,L){return p.then(function(){return loadLane(L)})},Promise.resolve());
   }
 
   function card(r,laneId){
@@ -222,13 +362,16 @@ footer code{font-family:var(--mono);font-size:13px}
       how.textContent="All lanes combines the lists below with duplicates removed.";
     }else{
       var L=laneById[state.lane];
-      how.textContent=L.hint+" "+nf.format(L.matches)+" repos match this search on GitHub; the top "+L.repos.length+" are shown.";
+      if(L.status==="loading")how.textContent=L.hint+" Loading from GitHub…";
+      else if(L.status==="error")how.textContent="Could not load this lane: "+L.err+" Click its chip to try again, or remove it.";
+      else how.textContent=L.hint+" "+nf.format(L.matches)+" repos match this search on GitHub; the top "+L.repos.length+" are shown."+(L.def?" This is your own lane, saved in this browser and fetched live.":"");
     }
   }
 
   q.addEventListener("input",function(){state.q=q.value;render()});
   sort.addEventListener("change",function(){state.s=sort.value;render()});
   render();
+  restoreLanes();
 })();
 </script>
 </body>
