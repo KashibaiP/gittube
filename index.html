@@ -38,7 +38,7 @@ select{flex:0 0 auto}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
 .chip{flex:0 0 auto;font:inherit;font-size:14px;border:0;cursor:pointer;background:var(--chip);color:var(--chip-fg);padding:7px 12px;border-radius:999px;white-space:nowrap}
-.chip b{font-family:var(--mono);font-weight:500;font-size:12px;opacity:.7;margin-left:5px}
+.chip b{font-family:var(--mono);font-weight:500;font-size:12px;opacity:.7}
 .chip[aria-pressed=true]{background:var(--accent);color:var(--accent-fg)}
 
 .count{margin:14px 0 10px;color:var(--muted);font-size:14px}
@@ -52,6 +52,8 @@ select{flex:0 0 auto}
 .thumb .nm{font-family:var(--display);font-weight:800;font-size:clamp(20px,4.6vw,26px);line-height:1.05;letter-spacing:-.01em;overflow-wrap:anywhere;margin-top:3px}
 .badges{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}
 .bd{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.42);padding:3px 7px;border-radius:4px}
+.bd.up{background:#15803d}
+.bd.new{background:#b45309}
 .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;flex:1}
 .desc{margin:0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .desc.none{color:var(--muted);font-style:italic}
@@ -81,6 +83,7 @@ footer code{font-family:var(--mono);font-size:13px}
       <input type="search" id="q" placeholder="Search names, descriptions, topics" aria-label="Search repos" autocomplete="off">
       <select id="sort" aria-label="Sort order">
         <option value="stars">Most stars</option>
+        <option value="gain">Most gained today</option>
         <option value="forks">Most forks</option>
         <option value="created">Newest</option>
         <option value="updated">Recently updated</option>
@@ -94,7 +97,7 @@ footer code{font-family:var(--mono);font-size:13px}
 
   <footer>
     <p id="how"></p>
-    <p>Data comes from the GitHub repository search API. <code>scripts/update.py</code> rewrites <code>data.js</code>. Edit the <code>LANES</code> list in that script to add your own languages or topics.</p>
+    <p>Data comes from the GitHub repository search API. <code>scripts/update.py</code> rewrites <code>data.js</code> once a day and keeps a snapshot of each repo's star count. The "today" gain compares the latest snapshot with the previous day's, and "this week" with one from a week earlier, so they appear after the second daily refresh and after the eighth.</p>
     <p>Stars and forks are counts at the time of the last refresh. Repos that mention certain adult-content words are left out.</p>
   </footer>
 </div>
@@ -108,7 +111,7 @@ footer code{font-family:var(--mono);font-size:13px}
   function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
   if(!D||!D.lanes){grid.appendChild(el("div","empty","data.js did not load. Run scripts/update.py or reload the page."));return}
 
-  var HUES={week:222,python:205,rust:22,telecom:160,"5g":285};
+  var HUES={today:340,week:222,python:205,rust:22,telecom:160,"5g":285};
   var nf=new Intl.NumberFormat("en");
   function fmt(iso){
     if(!iso)return "";
@@ -125,7 +128,24 @@ footer code{font-family:var(--mono);font-size:13px}
   var order=["all"].concat(D.lanes.map(function(L){return L.id}));
   var laneById={};D.lanes.forEach(function(L){laneById[L.id]=L});
   var state={lane:"all",q:"",s:"stars"};
-  stamp.textContent="data from "+fmt(D.generated);
+  stamp.textContent="data from "+fmt(D.generated)+(D.at?", "+D.at.slice(11,16)+" UTC":"");
+
+  // Momentum: stars gained since the previous daily snapshot (g1) and over a week (g7).
+  var hasGain=all.some(function(r){return r.g1!=null});
+  if(!hasGain){
+    var go=sort.querySelector('option[value="gain"]');
+    go.disabled=true;go.textContent="Most gained today (after 2 daily refreshes)";
+  }
+  var dayBefore=new Date(D.generated+"T00:00:00Z");
+  dayBefore.setUTCDate(dayBefore.getUTCDate()-1);
+  var newSince=dayBefore.toISOString().slice(0,10);
+  function badges(r){
+    var out=[];
+    if(r.g1!=null&&r.g1>0)out.push(["up","▲ +"+nf.format(r.g1)+" today"]);
+    if(r.g7!=null&&r.g7>0)out.push(["up","▲ +"+nf.format(r.g7)+" this week"]);
+    if(!out.length&&r.c>=newSince)out.push(["new","NEW"]);
+    return out;
+  }
 
   function pool(){return state.lane==="all"?all:laneById[state.lane].repos}
 
@@ -134,7 +154,7 @@ footer code{font-family:var(--mono);font-size:13px}
     order.forEach(function(k){
       var name=k==="all"?"All lanes":laneById[k].name;
       var n=k==="all"?all.length:laneById[k].repos.length;
-      var b=el("button","chip",name);b.type="button";
+      var b=el("button","chip",name+" ");b.type="button";
       b.setAttribute("aria-pressed",String(state.lane===k));
       b.appendChild(el("b",null,String(n)));
       b.addEventListener("click",function(){state.lane=k;render()});
@@ -149,6 +169,7 @@ footer code{font-family:var(--mono);font-size:13px}
     var bd=el("div","badges");
     bd.appendChild(el("span","bd","★ "+nf.format(r.s)));
     bd.appendChild(el("span","bd",laneById[laneId].name));
+    badges(r).forEach(function(b){bd.appendChild(el("span","bd "+b[0],b[1]))});
     th.appendChild(bd);
     th.appendChild(el("div","own",parts[0]+" /"));
     th.appendChild(el("div","nm",parts[1]));
@@ -184,11 +205,15 @@ footer code{font-family:var(--mono);font-size:13px}
   function render(){
     renderChips();
     var s=state.q.trim().toLowerCase();
-    var key={stars:"s",forks:"f",created:"c",updated:"u"}[state.s];
+    var key={stars:"s",gain:"g1",forks:"f",created:"c",updated:"u"}[state.s];
+    function val(r){return r[key]==null?-Infinity:r[key]}
     var list=pool().filter(function(r){
       if(!s)return true;
       return (r.n+" "+r.d+" "+r.l+" "+(r.t||[]).join(" ")).toLowerCase().indexOf(s)>-1;
-    }).slice().sort(function(a,b){return a[key]<b[key]?1:a[key]>b[key]?-1:0});
+    }).slice().sort(function(a,b){
+      var x=val(a),y=val(b);
+      return x<y?1:x>y?-1:b.s-a.s;
+    });
     grid.textContent="";
     if(!list.length)grid.appendChild(el("div","empty","No repos match. Clear the search or pick another lane."));
     list.forEach(function(r){grid.appendChild(card(r,state.lane==="all"?r.lane:state.lane))});

@@ -1,6 +1,6 @@
 # GitTube
 
-A HackerTube-style browser for GitHub repositories. Repos are grouped into lanes by language and topic: this week's new repos, Python, Rust, telecom and 5G. Each card shows stars, forks, dates, topics and a link to the real repository. You can search, sort, and click a topic to filter.
+A HackerTube-style browser for GitHub repositories. Repos are grouped into lanes: Today (created in the last 24 hours), This week, Python, Rust, telecom and 5G. Each card shows stars, how many stars the repo gained, forks, dates, topics and a link to the real repository. You can search, sort, and click a topic to filter.
 
 ## Run it
 
@@ -56,9 +56,27 @@ jobs:
           fi
 ```
 
+## Momentum
+
+GitHub does not report star growth, so the daily job saves a snapshot of every listed repo's star count (kept for 14 days, in `hist` inside `data.js`). Each refresh compares the new count with the snapshots:
+
+- **+N today** is the gain since the previous day's snapshot. It appears from the second daily refresh.
+- **+N this week** is the gain since a snapshot at least 7 days old. It appears from the eighth daily refresh.
+- **NEW** marks a repo created within the last day that has no gain yet.
+
+The **Most gained today** sort stays switched off until at least one repo has a gain.
+
+## Tests
+
+```
+python3 -m unittest discover -s tests -v     # script logic, no network needed
+npm install playwright && npx playwright install chromium
+node tests/e2e.js                            # the page, in a real browser
+```
+
 ## Add your own lanes
 
-Edit the `LANES` list at the top of `scripts/update.py`. Each lane has an id, a name, a short hint and a normal GitHub search query, for example:
+Edit `build_lanes` in `scripts/update.py`. Each lane has an id, a name, a short hint and a normal GitHub search query, for example:
 
 ```python
 {"id": "go", "name": "Go",
@@ -70,7 +88,7 @@ Then add a hue for the new id to the `HUES` object in `index.html` so its cards 
 
 ## Notes
 
-- Lane definitions: "This week" is repos created in the last 7 days. Python and Rust are repos created in the last 30 days. Telecom and 5G are repos with that topic that were pushed in the last 14 days and pass a minimum star count.
-- Stars and forks are the counts at the last refresh.
+- Lane definitions: Today is repos created in the last 24 hours. This week is the last 7 days. Python and Rust are repos created in the last 30 days. Telecom and 5G are repos with that topic that were pushed in the last 14 days and pass a minimum star count.
+- Stars and forks are the counts at the last refresh. Times are UTC.
 - Repos that mention certain adult-content words are filtered out in `update.py`.
 - To publish it as a website, make the repo public and turn on GitHub Pages for the `main` branch.
