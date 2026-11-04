@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/33d452c5-74f6-40ee-a1fa-9d5b8940b782
+
 # GitTube
 
 A HackerTube-style browser for GitHub repositories. Repos are grouped into lanes: Today (created in the last 24 hours), This week, Python, Rust, telecom and 5G. Each card shows stars, how many stars the repo gained, forks, dates, topics and a link to the real repository.
